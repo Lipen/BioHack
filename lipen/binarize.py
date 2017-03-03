@@ -26,14 +26,14 @@ print('[*] Binarizing with <window = {}>...'.format(window))
 assert window > 20
 # binarized :: {str: [bool]} == {chromosome: [binary]}
 binarized = {
-    'chr4': [False] * 1500000,
-    'chrM': [False] * 20000,
-    'chrX': [False] * 24000000,
-    'chrY': [False] * 4000000,
-    'chr2L': [False] * 24000000,
-    'chr2R': [False] * 26000000,
-    'chr3L': [False] * 29000000,
-    'chr3R': [False] * 33000000
+    'chr4': [False] * (1500000 // window),
+    # 'chrM': [False] * (20000 // window),  # Mitochondrial, do not count
+    'chrX': [False] * (24000000 // window),
+    'chrY': [False] * (4000000 // window),
+    'chr2L': [False] * (24000000 // window),
+    'chr2R': [False] * (26000000 // window),
+    'chr3L': [False] * (29000000 // window),
+    'chr3R': [False] * (33000000 // window)
 }
 
 # DEBUG
