@@ -10,12 +10,19 @@
 	* `~> list [ {0,1} ] of length N//k`
 
 	* TODO: think about overlapping windows (slide 2*k window with 50% overlap with previous?)
+	* TODO: maybe put `1/r` in each window, where r = number of windows where according peak lies (the cake is a lie)
+
+	* Seems like done...
 
 4. Countize (clusterize) as follows:
 	* Window size: large (around 1kk maybe) `w = 1_000_000`
 	* Put a value at each cluster: amount of binary_peaks inside window
 	* `~> list [ n_i ] of length M//w`
 
-5. Remove clusters which contain 0 in all cell-lines (including validation dataset) -- they are reduntant.
+	* Seems like done...
+
+5. Drink some coffee.
+
+6. Remove clusters which contain 0 in all cell-lines (including validation dataset) -- they are reduntant.
 	* (But if there is >0 in validation set in according cluster, then maybe it is very important... or it's just an small error...)
 	* TODO: maybe pick some threshold (such as value = 0..5) to remove cluster
