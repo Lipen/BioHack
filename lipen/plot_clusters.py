@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 
 input_filename = 'C:/TMP/dm6_rRNA_clu_{chromosome}.pkl'
 CHROMOLIST = ['chr4', 'chrX', 'chrY', 'chr2L', 'chr2R', 'chr3L', 'chr3R']
+# input_filename = 'C:/TMP/output/H3K4me1.IMR90.mono.bed_reb_{chromosome}.pkl'
+# CHROMOLIST = ['chr1+', 'chr2+', 'chr3+', 'chr1-', 'chr2-', 'chr3-']
 
 print('[*] Working...')
 time_start = time.time()
