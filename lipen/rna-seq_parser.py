@@ -1,9 +1,11 @@
+import os
 import csv
 import time
+import glob
 import pickle
 
-input_filename = '../data/NFkB_diffExp_a549.tsv'
-output_filename = 'C:/TMP/output/NFkB_diffExp_a549.pkl'
+input_filenames = '../data/*.tsv'
+output_folder = 'C:/TMP/output'
 
 
 def parse(input_filename):
@@ -27,6 +29,9 @@ def parse(input_filename):
     print('[+] Parsed <{}> peaks in {} seconds'.format(sum(map(len, data.values())), time.time() - time_start))
     return data
 
-data = parse(input_filename)
-with open(output_filename, 'wb') as f:
-    pickle.dump(data, f)
+
+for input_filename in glob.glob(input_filenames):
+    data = parse(input_filename)
+    out = os.path.join(output_folder, os.path.splitext(os.path.split(input_filename)[1])[0]) + '.pkl'
+    with open(out, 'wb') as f:
+        pickle.dump(data, f)
