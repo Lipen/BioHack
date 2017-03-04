@@ -20,8 +20,8 @@ time_start = time.time()
 with open(input_filename) as f:
     reader = csv.reader(f, delimiter='\t')
     for chromo, start, end, stuff, score, strand in reader:
-        if chromo in CHROMOLIST:
-            data[chromo].append(Item(chromo, int(start), int(end), score))
+        if chromo in CHROMOLIST and int(score) > 500:
+            data[chromo].append(Item(chromo, int(start), int(end), int(score)))
 print('[+] Parsed in {} seconds'.format(time.time() - time_start))
 
 print('[*] Working...')
