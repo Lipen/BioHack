@@ -20,7 +20,8 @@ for i, chromo in enumerate(CHROMOLIST):
         continue
 
     plt.subplot(2, 4, i + 1)
-    plt.plot(clusters, '-', marker='o', markerfacecolor='red')
+    # plt.plot(clusters, '-', marker='o', markerfacecolor='red')
+    plt.plot(clusters)
     plt.grid(True)
     plt.title('{}'.format(chromo))
 
