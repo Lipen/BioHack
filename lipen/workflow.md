@@ -47,3 +47,11 @@
 	* TODO: maybe pick some threshold (such as value = 0..5) to remove cluster
 
 6. Repeat for all cell-lines
+
+
+### Sh~t. It doesnt work.
+
+1. Split genome (each chromosome) into regions around (fully) every gene of given 20k.
+
+2. For each region count number of good and bad peaks from input datasets -- Chip-seq histone, Chip-seq TF
+	*
