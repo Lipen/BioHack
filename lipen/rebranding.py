@@ -3,11 +3,15 @@ import time
 import pickle
 import bisect
 from collections import namedtuple, defaultdict
+import numpy as np
 
-input_filename = '../data/dm6_rRNA.bed'
+# input_filename = '../data/dm6_rRNA.bed'
+input_filename = 'C:/TMP/human.txt'
 annotations_filename = '../data/annotation_{chromosome}.txt'
-output_filename = 'C:/TMP/dm6_rRNA_reb_{xy}_{chromosome}.pkl'
-CHROMOLIST_ = ['chr4', 'chrX', 'chrY', 'chr2L', 'chr2R', 'chr3L', 'chr3R']
+# output_filename = 'C:/TMP/dm6_rRNA_reb_{xy}_{chromosome}.pkl'
+output_filename = 'C:/TMP/human_reb_{chromosome}.pkl'
+# CHROMOLIST_ = ['chr4', 'chrX', 'chrY', 'chr2L', 'chr2R', 'chr3L', 'chr3R']
+CHROMOLIST_ = ['chr5', 'chr7']
 CHROMOLIST = [c + '+' for c in CHROMOLIST_] + [c + '-' for c in CHROMOLIST_]
 
 Item = namedtuple('Peak', ['start', 'end', 'score'])
@@ -18,9 +22,9 @@ time_start = time.time()
 with open(input_filename) as f:
     reader = csv.reader(f, delimiter='\t')
     for chromo, start, end, stuff, score, strand in reader:
-        if chromo in CHROMOLIST:  # and int(score) > 100:
-            data[chromo].append(Item(int(start), int(end), int(score)))
-print('[+] Parsed in {} seconds'.format(time.time() - time_start))
+        if chromo in CHROMOLIST_:  # and int(score) > 100:
+            data[chromo + strand].append(Item(int(start), int(end), int(score)))
+print('[+] Parsed <{}> peaks in {} seconds'.format(sum(map(len, data.values())), time.time() - time_start))
 
 print('[*] Working...')
 time_start = time.time()
@@ -38,11 +42,12 @@ for chromo in CHROMOLIST:
     Gene = namedtuple('Gene', ['gene_id', 'left', 'right'])
     genes = []
     with open(anno) as f:
-        gene_id, left, right = f.readline().rstrip().split('\t')
-        genes.append(Gene(gene_id, int(left), int(right)))
+        for line in f.readlines():
+            gene_id, left, right = line.rstrip().split('\t')
+            genes.append(Gene(gene_id, int(left), int(right)))
     print('[+] Annotated genes: <{}>'.format(len(genes)))
 
-    print('[*] Merging <{}> gene regions...'.format(len(genes)))
+    print('[*] Merging <{}> genes...'.format(len(genes)))
     genes.sort(key=lambda g: (g.left, g.right))
     merged = []  # :: (id, left, right)
     for higher in genes:
@@ -54,25 +59,33 @@ for chromo in CHROMOLIST:
                 merged[-1] = (i, a, max(b, higher.right))
             else:
                 merged.append((i, higher.left, higher.right))
-    print('[+] Merged into <{}> regions'.format(len(merged)))
 
-    k = len(merged)
-    rebranded_good = [0] * k
-    rebranded_bad = [0] * k
+    print('[*] Splitting <{}> "genes" into gene-regions...'.format(len(merged)))
+    regions = []
+    left = 0
+    for i in range(len(merged) - 1):
+        x, y = merged[i], merged[i + 1]
+        right = (x[2] + y[1]) // 2
+        r = (left, right)
+        regions.append(r)
+        left = right
+
+    print('[*] Rebranding <{}> gene-regions...'.format(len(regions)))
+    k = len(regions) + 1
+    rebranded = np.zeros(2, k)
+    rls = [r[0] for r in regions]
 
     for peak in meta:
-        i = bisect.bisect_left([item.left for item in merged], peak.start)
+        i = bisect.bisect_left(rls, peak.start)
 
         if 0 < peak.score < 2:
-            rebranded_bad[i] += 1
+            rebranded[0, i] += 1
         else:
-            rebranded_good[i] += 1
+            rebranded[1, i] += 1
 
-    out = output_filename.format(xy='good', chromosome=chromo)
+    out = output_filename.format(chromosome=chromo)
     print('[*] Dumping to <{}>...'.format(out))
     with open(out, 'wb') as f:
-        pickle.dump(rebranded_good, f, pickle.HIGHEST_PROTOCOL)
-    out = output_filename.format(xy='bad', chromosome=chromo)
-    print('[*] Dumping to <{}>...'.format(out))
-    with open(out, 'wb') as f:
-        pickle.dump(rebranded_bad, f, pickle.HIGHEST_PROTOCOL)
+        pickle.dump(rebranded, f, pickle.HIGHEST_PROTOCOL)
+
+print('[+] Done in {} seconds!'.format(time.time() - time_start))
