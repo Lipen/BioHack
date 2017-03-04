@@ -7,7 +7,6 @@ CHROMOLIST = ['chr4', 'chrX', 'chrY', 'chr2L', 'chr2R', 'chr3L', 'chr3R']
 
 print('[*] Working...')
 time_start = time.time()
-plt.figure()
 fig, axes = plt.subplots(2, 4, figsize=(16, 9))
 
 for i, chromo in enumerate(CHROMOLIST):
