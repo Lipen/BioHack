@@ -12,14 +12,14 @@ import numpy as np
 def parse(input_filename):
     print('[*] Parsing <{}>...'.format(input_filename))
     time_start = time.time()
-    Peak = namedtuple('Peak', ['start', 'end', 'enrich'])
+    Peak = namedtuple('Peak', ['start', 'end', 'summit'])
     data = defaultdict(list)
 
     with open(input_filename) as f:
         reader = csv.reader(f, delimiter='\t')
-        for chromo, start, end, stuff, enrich, *_ in reader:
+        for chromo, start, end, name, summit, _, fold_change, *_ in reader:
             if chromo in CHROMOLIST:
-                data[chromo].append(Peak(int(start), int(end), float(enrich)))
+                data[chromo].append(Peak(int(start), int(end), float(summit)))
 
     print('[+] Parsed <{}> peaks in {} seconds'.format(sum(map(len, data.values())), time.time() - time_start))
     return data
@@ -76,7 +76,7 @@ def rebrand(lefts, meta):
     print('[*] Rebranding <{}> gene-delta(<{}>)-neighbours...'.format(len(lefts), delta))
     k = len(lefts) + 1
     rebranded = np.zeros((k, 3), dtype=int)
-    meta_sorted = sorted(meta, key=lambda x: x.enrich)
+    meta_sorted = sorted(meta, key=lambda x: x.summit)
     t = len(meta_sorted) / 10
     q10 = meta_sorted[int(t)]
     q90 = meta_sorted[int(t * 9)]
@@ -84,9 +84,9 @@ def rebrand(lefts, meta):
     for peak in meta:
         i = bisect.bisect_left(lefts, peak.start)
 
-        if peak.enrich <= q10:
+        if peak.summit <= q10:
             rebranded[i, 0] += 1  # xi, bad
-        elif peak.enrich <= q90:
+        elif peak.summit <= q90:
             rebranded[i, 1] += 1  # yi, good
         else:
             rebranded[i, 2] += 1  # zi, idk
