@@ -5,14 +5,14 @@ import pickle
 from collections import namedtuple, defaultdict
 import numpy as np
 
-input_filename = '../data/dm6_rRNA.bed'
-output_filename = 'C:/TMP/dm6_rRNA_bin_{chromosome}.pkl'
-CHROMOLIST = ['chr4', 'chrX', 'chrY', 'chr2L', 'chr2R', 'chr3L', 'chr3R']
-# input_filename = 'C:/TMP/H3K4me1.IMR90.mono.bed'
-# output_filename = 'C:/TMP/H3K4me1.IMR90.mono_bin_{chromosome}.pkl'
-# CHROMOLIST = ['chr11', 'chr2', 'chrM', 'chr13', 'chrX', 'chr6', 'chr15', 'chr16', 'chr3', 'chr12', 'chr20', 'chr7', 'chr17', 'chr1', 'chr19', 'chr9', 'chr4', 'chr5', 'chrY', 'chr18', 'chr21', 'chr14', 'chr22', 'chr8', 'chr10']
+# input_filename = '../data/dm6_rRNA.bed'
+# output_filename = 'C:/TMP/dm6_rRNA_bin_{chromosome}.pkl'
+# CHROMOLIST = ['chr4', 'chrX', 'chrY', 'chr2L', 'chr2R', 'chr3L', 'chr3R']
+input_filename = 'C:/TMP/H3K4me1.IMR90.mono.bed'
+output_filename = 'C:/TMP/H3K4me1.IMR90.mono_bin_{chromosome}.pkl'
+CHROMOLIST = ['chr11', 'chr2', 'chrM', 'chr13', 'chrX', 'chr6', 'chr15', 'chr16', 'chr3', 'chr12', 'chr20', 'chr7', 'chr17', 'chr1', 'chr19', 'chr9', 'chr4', 'chr5', 'chrY', 'chr18', 'chr21', 'chr14', 'chr22', 'chr8', 'chr10']
 
-Item = namedtuple('Peak', ['chr', 'start', 'end', 'score'])
+Item = namedtuple('Peak', ['start', 'end', 'score'])
 data = defaultdict(list)
 
 print('[*] Parsing <{}>...'.format(input_filename))
@@ -20,8 +20,8 @@ time_start = time.time()
 with open(input_filename) as f:
     reader = csv.reader(f, delimiter='\t')
     for chromo, start, end, stuff, score, strand in reader:
-        if chromo in CHROMOLIST and int(score) > 500:
-            data[chromo].append(Item(chromo, int(start), int(end), int(score)))
+        if chromo in CHROMOLIST:  # and int(score) > 100:
+            data[chromo].append(Item(int(start), int(end), int(score)))
 print('[+] Parsed in {} seconds'.format(time.time() - time_start))
 
 print('[*] Working...')
