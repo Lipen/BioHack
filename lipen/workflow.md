@@ -1,9 +1,15 @@
+### Possible workflow:
+
 1. Parse bed-file.
 	Peaks ~> nametuple\<chr::str, start::int, end::int, feature::str, strand::('+' or '-')\>
 
-2. Make some Panyushev tea
+	* TODO: Maybe reparse file for each chromosome, because all-chromosomes-data can not to fit into RAM
 
-3. Binarize data as follows:
+	* TODO: Maybe make robust available chromosomes getter...?
+
+	> Done
+
+2. Binarize data as follows:
 
 	* Peak width: `width = end-start+1`
 
@@ -17,9 +23,11 @@
 
 	* TODO: maybe put `1/r` in each window, where `r` = number of windows where according peak lies (the cake is a lie)
 
-	> Seems like done...
+	* TODO: do not count peaks with low height (need robust progressive threshold...)
 
-4. Countize (clusterize) as follows:
+	> Done
+
+3. Countize (clusterize) as follows:
 	* Pick number of windows: `k = 20` or more
 	* Window size: `w = ceil(n / k)`
 
@@ -28,13 +36,14 @@
 	* Slide a window and put value at each cluster: amount of binary_peaks inside window
 	* ~> `list [ m_i ]` of length `k`
 
-	> Seems like done...
-
-5. Drink some coffee.
 	> Done
 
-6. Remove clusters which contain 0 in all cell-lines (including validation dataset) -- they are reduntant.
+4. Drink some coffee.
+
+	> Done
+
+5. Remove clusters which contain 0 in all cell-lines (including validation dataset) -- they are reduntant.
 	* (But if there is >0 in validation set in according cluster, then maybe it is very important... or it's just an small error...)
 	* TODO: maybe pick some threshold (such as value = 0..5) to remove cluster
 
-7. Repeat for all cell-lines
+6. Repeat for all cell-lines
