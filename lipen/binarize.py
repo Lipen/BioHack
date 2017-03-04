@@ -1,55 +1,58 @@
 import csv
 import time
-from collections import namedtuple
-import numpy as np
+import math
 import pickle
-
-Item = namedtuple('Item', ['chr', 'start', 'end', 'feature', 'score', 'strand'])
+from collections import namedtuple, defaultdict
+import numpy as np
 
 input_filename = '../data/dm6_rRNA.bed'
-output_filename = 'C:/TMP/dm6_rRNA.pkl'
+output_filename = 'C:/TMP/dm6_rRNA_bin_{chromosome}.pkl'
 
+Item = namedtuple('Peak', ['chr', 'start', 'end', 'stuff', 'score', 'strand'])
+CHROMOLIST = ['chr4', 'chrX', 'chrY', 'chr2L', 'chr2R', 'chr3L', 'chr3R']
+
+data = defaultdict(list)
 
 print('[*] Parsing <{}>...'.format(input_filename))
 with open(input_filename) as f:
     reader = csv.reader(f, delimiter='\t')
-    data = [Item(chr, int(start), int(end), feature, score, strand)
-            for chr, start, end, feature, score, strand in reader]
-print('[+] len(data) = {}'.format(len(data)))
+    for chromo, start, end, stuff, score, strand in reader:
+        if chromo in CHROMOLIST:
+            data[chromo].append(Item(chromo, int(start), int(end),
+                                     stuff, score, strand))
 
-
-print('[*] Processing...')
+print('[*] Working...')
 time_start = time.time()
-window = int(np.median([item.end - item.start + 1 for item in data]))
 
-print('[*] Binarizing with <window = {}>...'.format(window))
-assert window > 20
-# binarized :: {str: [bool]} == {chromosome: [binary]}
-binarized = {
-    'chr4': [False] * (1500000 // window),
-    # 'chrM': [False] * (20000 // window),  # Mitochondrial, do not count
-    'chrX': [False] * (24000000 // window),
-    'chrY': [False] * (4000000 // window),
-    'chr2L': [False] * (24000000 // window),
-    'chr2R': [False] * (26000000 // window),
-    'chr3L': [False] * (29000000 // window),
-    'chr3R': [False] * (33000000 // window)
-}
+for chromo in CHROMOLIST:
+    meta = data[chromo]
+    print('[*] Processing <{}> with {} peaks'.format(chromo, len(meta)))
 
-# DEBUG
-chroms = len(set(item.chr for item in data))
-print('CHROMOSOMS: {}'.format(chroms))
-# DEBUG END
+    # w = twice the median of peaks widths
+    w = 2 * int(np.median([item.end - item.start + 1 for item in meta]))
+    k = math.ceil(max(item.end for item in meta) / w)
+    n = k * w
+    print('  > Window width: <w = {}>'.format(w))
+    print('  > Number of windows: <k = {}>'.format(k))
+    print('  > Ceiled chromosome length: <n = {}>'.format(n))
+    assert w > 40, "Maybe it would be tooooo large with such small window..."
 
-for item in data:
-    low = item.start // window
-    high = item.end // window
-    for j in range(low, high + 1):
-        if item.chr in binarized:
-            binarized[item.chr][j] = True
+    binarized = [False] * k
 
-print('[+] Done processing in {} seconds'.format(time.time() - time_start))
+    for item in meta:
+        # low/high indices of peaks covered by window
+        low = item.start // w
+        high = item.end // w
+        for j in range(low, high + 1):
+            try:
+                binarized[j] = True
+            except:
+                print(low, high, item)
+                raise
 
-print('[*] Dumping to <{}>...'.format(output_filename))
-with open(output_filename, 'wb') as f:
-    pickle.dump(binarized, f, pickle.HIGHEST_PROTOCOL)
+    out = output_filename.format(chromosome=chromo)
+    print('[*] Dumping to <{}>...'.format(out))
+    with open(out, 'wb') as f:
+        pickle.dump(binarized, f, pickle.HIGHEST_PROTOCOL)
+
+print('[+] Done in {} seconds!'.format(time.time() - time_start))
