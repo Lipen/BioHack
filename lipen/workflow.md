@@ -4,25 +4,37 @@
 2. Make some Panyushev tea
 
 3. Binarize data as follows:
+
 	* Peak width: `width = end-start+1`
-	* Choose window size `k = median(widths)` (maybe twice as much)
-	* Put a 1 in each window which contains any peak, and 0 otherwise
-	* `~> list [ {0,1} ] of length N//k`
+
+	For each chromosome do:
+
+	* Choose window size `w = 2 * median(widths)`
+	* Put a `1` in each window which contains any peak, and `0` otherwise
+	* ~> `list [ {0,1} ]` of length `k=ceil(N/w)`
 
 	* TODO: think about overlapping windows (slide 2*k window with 50% overlap with previous?)
-	* TODO: maybe put `1/r` in each window, where r = number of windows where according peak lies (the cake is a lie)
 
-	* Seems like done...
+	* TODO: maybe put `1/r` in each window, where `r` = number of windows where according peak lies (the cake is a lie)
+
+	> Seems like done...
 
 4. Countize (clusterize) as follows:
-	* Window size: large (around 1kk maybe) `w = 1_000_000`
-	* Put a value at each cluster: amount of binary_peaks inside window
-	* `~> list [ n_i ] of length M//w`
+	* Pick number of windows: `k = 20` or more
+	* Window size: `w = ceil(n / k)`
 
-	* Seems like done...
+	For each chromosome do:
+
+	* Slide a window and put value at each cluster: amount of binary_peaks inside window
+	* ~> `list [ m_i ]` of length `k`
+
+	> Seems like done...
 
 5. Drink some coffee.
+	> Done
 
 6. Remove clusters which contain 0 in all cell-lines (including validation dataset) -- they are reduntant.
 	* (But if there is >0 in validation set in according cluster, then maybe it is very important... or it's just an small error...)
 	* TODO: maybe pick some threshold (such as value = 0..5) to remove cluster
+
+7. Repeat for all cell-lines
