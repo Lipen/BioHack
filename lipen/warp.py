@@ -12,7 +12,7 @@ def main():
                 blackhole = pickle.load(f)
                 blackholes.append(blackhole)
         res = [[blackhole[j][0] for blackhole in blackholes] for j in range(len(blackholes[0]))]
-        out = 'IMR90_{chromosome}_d1000.pkl'.format(chromosome=chromo)
+        out = 'C:/TMP/warped/IMR90_{chromosome}_d1000.pkl'.format(chromosome=chromo)
         print('[*] Dumping back to <{}>...'.format(out))
         with open(out, 'wb') as f:
             pickle.dump(res, f)
