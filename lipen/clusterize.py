@@ -29,14 +29,14 @@ for chromo in CHROMOLIST:
         continue
 
     n = len(binarized)
-    k = 30  # number of clusters
+    k = 100  # number of clusters
     w = math.ceil(n / k)  # width of cluster
     clusters = []
 
     for chunk in chunks(binarized, w):
         clusters.append(sum(chunk))
 
-    print('[+] <{}> clusters at <{}>:'.format(k, chromo))
+    print('[+] <{}> clusters with width <{}> at <{}>:'.format(k, w, chromo))
     print('  > {}'.format(clusters))
 
     out = output_filename.format(chromosome=chromo)
