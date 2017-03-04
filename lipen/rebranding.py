@@ -76,13 +76,17 @@ def rebrand(lefts, meta):
     print('[*] Rebranding <{}> gene-delta(<{}>)-neighbours...'.format(len(lefts), delta))
     k = len(lefts) + 1
     rebranded = np.zeros((k, 3), dtype=int)
+    meta_sorted = sorted(meta, key=lambda x: x.enrich)
+    t = len(meta_sorted) / 10
+    q10 = meta_sorted[int(t)]
+    q90 = meta_sorted[int(t * 9)]
 
     for peak in meta:
         i = bisect.bisect_left(lefts, peak.start)
 
-        if peak.enrich <= 18:
+        if peak.enrich <= q10:
             rebranded[i, 0] += 1  # xi, bad
-        elif peak.enrich <= 70:
+        elif peak.enrich <= q90:
             rebranded[i, 1] += 1  # yi, good
         else:
             rebranded[i, 2] += 1  # zi, idk
