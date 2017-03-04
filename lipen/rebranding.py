@@ -12,14 +12,14 @@ import numpy as np
 def parse(input_filename):
     print('[*] Parsing <{}>...'.format(input_filename))
     time_start = time.time()
-    Peak = namedtuple('Peak', ['start', 'end', 'score'])
+    Peak = namedtuple('Peak', ['start', 'end', 'enrich'])
     data = defaultdict(list)
 
     with open(input_filename) as f:
         reader = csv.reader(f, delimiter='\t')
-        for chromo, start, end, stuff, score, strand in reader:
-            if chromo + strand in CHROMOLIST:  # and int(score) > 100:
-                data[chromo + strand].append(Peak(int(start), int(end), int(score)))
+        for chromo, start, end, stuff, enrich, *_ in reader:
+            if chromo in CHROMOLIST:
+                data[chromo].append(Peak(int(start), int(end), float(enrich)))
 
     print('[+] Parsed <{}> peaks in {} seconds'.format(sum(map(len, data.values())), time.time() - time_start))
     return data
@@ -46,21 +46,15 @@ def process_chromosome(data, chromo, input_filename):
     genes = get_annotated_genes(chromo)
     genes.sort(key=lambda g: (g.left, g.right))
 
-    # merged = merge(genes)
-    # regions = get_gene_regions(merged)
-    regions = get_gene_regions(genes)
-    rebranded = rebrand(regions, meta)
+    lefts = [g.left - delta for g in genes]
+    rebranded = rebrand(lefts, meta)  # {k x 3}
+    blackhole = [(r, g.gene_id, g.left - delta, g.left + delta) for r, g in zip(rebranded, genes)]
 
-    out = os.path.join(output_folder, '{}_reb_{}.pkl'.format(os.path.split(input_filename)[1], chromo))
+    name = os.path.splitext(os.path.split(input_filename)[1])[0]
+    out = os.path.join(output_folder, '{}_{chromosome}_d{delta}.pkl'.format(name, chromosome=chromo, delta=delta))
     print('[*] Dumping to <{}>...'.format(out))
     with open(out, 'wb') as f:
-        pickle.dump(rebranded, f, pickle.HIGHEST_PROTOCOL)
-
-    # MAPPING
-    out = os.path.join(output_folder, '{}_REGIONS_{}.pkl'.format(os.path.split(input_filename)[1], chromo))
-    print('[*] Dumping to <{}>...'.format(out))
-    with open(out, 'wb') as f:
-        pickle.dump(regions, f, pickle.HIGHEST_PROTOCOL)
+        pickle.dump(blackhole, f, pickle.HIGHEST_PROTOCOL)
 
 
 def get_annotated_genes(chromo):
@@ -78,51 +72,20 @@ def get_annotated_genes(chromo):
     return genes
 
 
-def merge(genes):
-    print('[*] Merging <{}> genes...'.format(len(genes)))
-    merged = []  # :: (id, left, right)
-    for higher in genes:
-        if not merged:
-            merged.append((higher.gene_id, higher.left, higher.right))
-        else:
-            i, a, b = merged[-1]
-            if higher.left <= a:
-                merged[-1] = (i, a, max(b, higher.right))
-            else:
-                merged.append((i, higher.left, higher.right))
-    return merged
-
-
-# def get_gene_regions(merged):
-    # print('[*] Splitting <{}> "genes" into gene-regions...'.format(len(merged)))
-    # regions = []
-    # left = 0
-    # for i in range(len(merged) - 1):
-    #     x, y = merged[i], merged[i + 1]
-    #     right = (x[2] + y[1]) // 2
-    #     r = (left, right)
-    #     regions.append(r)
-    #     left = right
-    # return regions
-def get_gene_regions(genes):
-    print('[*] Building regions around genes +-delta = <{}>'.format(delta))
-    regions = [(g.left - delta, g.left + delta, g.gene_id) for g in genes]  # yes, BOTH from left edge!
-    return regions
-
-
-def rebrand(regions, meta):
-    print('[*] Rebranding <{}> gene-regions...'.format(len(regions)))
-    k = len(regions) + 1
-    rebranded = np.zeros((k, 2), dtype=int)
-    rls = [r[0] for r in regions]
+def rebrand(lefts, meta):
+    print('[*] Rebranding <{}> gene-delta(<{}>)-neighbours...'.format(len(lefts), delta))
+    k = len(lefts) + 1
+    rebranded = np.zeros((k, 3), dtype=int)
 
     for peak in meta:
-        i = bisect.bisect_left(rls, peak.start)
+        i = bisect.bisect_left(lefts, peak.start)
 
-        if peak.score <= 3:
-            rebranded[i, 0] += 1  # Bad
+        if peak.enrich <= 18:
+            rebranded[i, 0] += 1  # xi, bad
+        elif peak.enrich <= 70:
+            rebranded[i, 1] += 1  # yi, good
         else:
-            rebranded[i, 1] += 1  # Good
+            rebranded[i, 2] += 1  # zi, idk
 
     return rebranded
 
@@ -133,27 +96,24 @@ def main():
     parser.add_argument('-input', default='../input/*.bed', help='Input folder and files in glob format')
     parser.add_argument('-output', default='../output')
     parser.add_argument('-annotation', default='../data/annotation_{chromosome}.txt')
-    parser.add_argument('-chromolist', default='chr1,chr2,chr3')
-    parser.add_argument('-delta', default=1000)  # bases
+    parser.add_argument('-chromolist', default='chr1,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr2,chr20,chr21,chr22,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chrX,chrY')
+    parser.add_argument('-delta', type=int, default=1000)  # bases
 
-    global input_folder, output_folder, annotations_filename, CHROMOLIST, delta
+    global output_folder, annotations_filename, CHROMOLIST, delta
     args = parser.parse_args()
-    input_folder = args.input
+    input_glob = args.input
     output_folder = args.output
     annotations_filename = args.annotation
-    CHROMOLIST_ = args.chromolist.split(',')
-    CHROMOLIST = [c + '+' for c in CHROMOLIST_] + [c + '-' for c in CHROMOLIST_]
-    print('CHROMOLIST: {}'.format(CHROMOLIST))
+    CHROMOLIST = args.chromolist.split(',')
     delta = args.delta
 
-    files = glob.glob(input_folder)
+    files = glob.glob(input_glob)
     if files:
         print('[*] Found input files:')
         for f in files:
             print('  > {}'.format(f))
     else:
         print('[!] There is no input files :c')
-
     for input_filename in files:
         data = parse(input_filename)
         work(data, input_filename)
