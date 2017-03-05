@@ -48,7 +48,8 @@ def process_chromosome(data, chromo, input_filename):
 
     lefts = [g.left - delta for g in genes]
     rebranded = rebrand(lefts, meta)  # {k x 3}
-    blackhole = [(r, g.gene_id, g.left - delta, g.left + delta) for r, g in zip(rebranded, genes)]
+    blackhole = [(r, g.gene_id, g.left - delta, g.left + delta)
+                 for r, g in zip(rebranded, genes)]
 
     name = os.path.splitext(os.path.split(input_filename)[1])[0]
     out = os.path.join(output_folder, '{}_{chromosome}_d{delta}.pkl'.format(name, chromosome=chromo, delta=delta))
@@ -78,11 +79,14 @@ def rebrand(lefts, meta):
     rebranded = np.zeros((k, 3), dtype=int)
     meta_sorted = sorted(meta, key=lambda x: x.summit)
     t = len(meta_sorted) / 10
-    q10 = meta_sorted[int(t)]
-    q90 = meta_sorted[int(t * 9)]
+    q10 = meta_sorted[int(t)].summit
+    q90 = meta_sorted[int(t * 9)].summit
 
     for peak in meta:
-        i = bisect.bisect_left(lefts, peak.start)
+        i = bisect.bisect_left(lefts, peak.start) - 1
+
+        if peak.start > lefts[i] + 2 * delta:
+            continue
 
         if peak.summit <= q10:
             rebranded[i, 0] += 1  # xi, bad
@@ -100,7 +104,7 @@ def main():
     parser.add_argument('-input', default='../input/*.bed', help='Input folder and files in glob format')
     parser.add_argument('-output', default='../output')
     parser.add_argument('-annotation', default='../data/annotation_{chromosome}.txt')
-    parser.add_argument('-chromolist', default='chr1,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr2,chr20,chr21,chr22,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chrX,chrY')
+    parser.add_argument('-chromolist', default='chr1,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr2,chr20,chr21,chr22,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chrX')
     parser.add_argument('-delta', type=int, default=1000)  # bases
 
     global output_folder, annotations_filename, CHROMOLIST, delta
