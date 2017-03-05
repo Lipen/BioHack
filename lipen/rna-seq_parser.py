@@ -8,7 +8,7 @@ from collections import namedtuple
 input_filenames = '../data/*.tsv'
 output_folder = 'C:/TMP/output'
 annotations_filename = '../data/annotation_{chromosome}.txt'
-CHROMOLIST = 'chr1,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr2,chr20,chr21,chr22,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chrX,chrY'.split(',')
+CHROMOLIST = 'chr1,chr10,chr11,chr12,chr13,chr14,chr15,chr16,chr17,chr18,chr19,chr2,chr20,chr21,chr22,chr3,chr4,chr5,chr6,chr7,chr8,chr9,chrX'.split(',')
 
 
 def parse(input_filename):
@@ -56,6 +56,6 @@ for input_filename in glob.glob(input_filenames):
         for c, f in data.items():
             if c in genbase[chromo]:
                 meta[c] = f
-        out = os.path.join(output_folder, os.path.splitext(os.path.split(input_filename)[1])[0].split('_')[-1]) + '_{}'.format(chromo) + '.pkl'
+        out = 'DiffExpr_' + os.path.join(output_folder, os.path.splitext(os.path.split(input_filename)[1])[0].split('_')[-1]) + '_{}'.format(chromo) + '.pkl'
         with open(out, 'wb') as f:
             pickle.dump(meta, f)
